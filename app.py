@@ -30,7 +30,7 @@ if not st.session_state.projects:
         st.error(f"Error cargando proyectos: {str(e)}")
 
 # Interfaz principal
-st.title("Extractor de Horas para1 Calculadora")
+st.title("Calculadora de Proyecto")
 
 # Selector de proyecto
 project_names = [p['name'] for p in st.session_state.projects]
