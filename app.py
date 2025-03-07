@@ -1,6 +1,7 @@
 import streamlit as st
 from openproject_client import OpenProjectClient
 from data_processor import prepare_assignment_data, ROLES_ORDER, process_time_entries, generate_excel_output, calculate_role_hours, generate_excel_from_template
+from datetime import datetime
 
 # Configuración inicial de estado
 if 'projects' not in st.session_state:
@@ -62,6 +63,28 @@ if selected_project:
                 user_id: {'horas': data['horas']}
                 for user_id, data in hours_data.items()
             }
+
+            dates = []
+            for entry in time_entries:
+                if entry.get('spentOn'):
+                    try:
+                        date = datetime.strptime(entry['spentOn'], '%Y-%m-%d')
+                        dates.append(date)
+                    except ValueError:
+                        pass
+            
+            if dates:
+                start_date = min(dates)
+                end_date = max(dates)
+                total_days = (end_date - start_date).days + 1
+                duration_months = total_days / 30  # 30 días por mes
+                duration_months_rounded = round(duration_months, 1)
+            else:
+                duration_months_rounded = 0.0
+            
+            st.session_state.duration_months = duration_months_rounded
+
+
         except Exception as e:
             st.error(f"Error cargando datos del proyecto: {str(e)}")
 
@@ -133,7 +156,15 @@ if all_assigned and st.session_state.assignment_data:
         project_name = selected_project.replace(" ", "_")
         
         if st.button("Generar Calculadora Proyecto"):
-            excel_data, filename = generate_excel_from_template(role_hours_list, project_name)
+            role_hours = calculate_role_hours(st.session_state.user_assignments, st.session_state.user_hours)
+            role_hours_list = [float(round(role_hours[role], 2)) for role in ROLES_ORDER]
+            project_name = selected_project.replace(" ", "_")
+            
+            excel_data, filename = generate_excel_from_template(
+                role_hours_list, 
+                project_name,
+                st.session_state.get('duration_months', 0.0)
+            )
             
             st.download_button(
                 label="Descargar Excel",

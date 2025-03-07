@@ -17,7 +17,7 @@ ROLES_ORDER = [
     "Gerente Unidad Telco", "Senior Técnico-1 Telco"
 ]
 
-def generate_excel_from_template(role_hours_list, project_name=None):
+def generate_excel_from_template(role_hours_list, project_name=None, duration_months=0.0):
     # Usar resource_path para ubicar el template
     template_name = "Copia de NMX-PROYECTO-Analisis-Recursos v3.1.xlsx"
     template_path = resource_path(template_name)
@@ -38,6 +38,10 @@ def generate_excel_from_template(role_hours_list, project_name=None):
             cell = ws.cell(row=start_row, column=start_col + i)
             cell.value = float(value)
             cell.number_format = '0.00'
+        
+        # Insertar duración en H9
+        ws['H9'] = duration_months
+        ws['H9'].number_format = '0.0'  # Formato con un decimal
         
         # Crear archivo en memoria
         output = io.BytesIO()
